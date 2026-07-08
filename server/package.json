@@ -9,6 +9,7 @@
     "test": "jest --forceExit"
   },
   "dependencies": {
+    "dotenv": "^17.4.2",
     "express": "^4.19.2"
   },
   "devDependencies": {
