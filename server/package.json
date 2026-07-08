@@ -6,10 +6,17 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "lint": "eslint src --ext .js",
-    "test": "jest --forceExit"
+    "test": "jest --forceExit",
+    "migrate:up": "node-pg-migrate up --migrations-dir migrations --database-url-var DATABASE_URL",
+    "migrate:down": "node-pg-migrate down --migrations-dir migrations --database-url-var DATABASE_URL"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "express-validator": "^7.3.2",
+    "jsonwebtoken": "^9.0.3",
+    "node-pg-migrate": "^7.9.1",
+    "pg": "^8.22.0"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
