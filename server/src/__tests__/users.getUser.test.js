@@ -8,17 +8,21 @@ const app = require('../app');
 
 beforeEach(() => jest.clearAllMocks());
 
+const ID_1 = '550e8400-e29b-41d4-a716-446655440001';
+const ID_2 = '550e8400-e29b-41d4-a716-446655440002';
+const ID_MISSING = '550e8400-e29b-41d4-a716-446655440099';
+
 describe('GET /api/users/:id', () => {
   it('returns 404 when user does not exist', async () => {
     userModel.findPublicById.mockResolvedValue(null);
-    const res = await request(app).get('/api/users/uuid-missing');
+    const res = await request(app).get(`/api/users/${ID_MISSING}`);
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe('NOT_FOUND');
   });
 
   it('returns public profile with avgRating and reviewCount', async () => {
     const profile = {
-      id: 'uuid-1',
+      id: ID_1,
       name: 'Alice',
       bio: 'Developer',
       skills: ['JS', 'Python'],
@@ -28,7 +32,7 @@ describe('GET /api/users/:id', () => {
       review_count: 2,
     };
     userModel.findPublicById.mockResolvedValue(profile);
-    const res = await request(app).get('/api/users/uuid-1');
+    const res = await request(app).get(`/api/users/${ID_1}`);
     expect(res.status).toBe(200);
     expect(res.body).toEqual(profile);
     expect(res.body).not.toHaveProperty('email');
@@ -37,7 +41,7 @@ describe('GET /api/users/:id', () => {
 
   it('returns avgRating null and reviewCount 0 for user with no reviews', async () => {
     const profile = {
-      id: 'uuid-2',
+      id: ID_2,
       name: 'Bob',
       bio: null,
       skills: [],
@@ -47,7 +51,7 @@ describe('GET /api/users/:id', () => {
       review_count: 0,
     };
     userModel.findPublicById.mockResolvedValue(profile);
-    const res = await request(app).get('/api/users/uuid-2');
+    const res = await request(app).get(`/api/users/${ID_2}`);
     expect(res.status).toBe(200);
     expect(res.body.avg_rating).toBeNull();
     expect(res.body.review_count).toBe(0);
