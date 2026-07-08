@@ -49,4 +49,16 @@ const getUser = async (req, res, next) => {
   }
 };
 
-module.exports = { getMe, updateMe, getUser };
+const deleteMe = async (req, res, next) => {
+  try {
+    const count = await userModel.deleteById(req.user.id);
+    if (count === 0) {
+      return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'User not found' } });
+    }
+    return res.status(204).send();
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = { getMe, updateMe, getUser, deleteMe };
