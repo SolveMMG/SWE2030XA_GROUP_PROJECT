@@ -37,4 +37,16 @@ const updateMe = async (req, res, next) => {
   }
 };
 
-module.exports = { getMe, updateMe };
+const getUser = async (req, res, next) => {
+  try {
+    const user = await userModel.findPublicById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'User not found' } });
+    }
+    return res.json(user);
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = { getMe, updateMe, getUser };
