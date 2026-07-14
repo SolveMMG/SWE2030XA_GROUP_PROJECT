@@ -21,6 +21,14 @@ const issueRefreshToken = async (userId) => {
   return token;
 };
 
+const cleanupExpiredRefreshTokens = async () => {
+  try {
+    await authTokenModel.deleteExpiredRefreshTokens();
+  } catch (error) {
+    console.error('Unable to clean up expired refresh tokens', error);
+  }
+};
+
 const googleRedirect = (req, res, next) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const redirectUri = process.env.GOOGLE_CALLBACK_URL;
@@ -84,6 +92,7 @@ const googleCallback = async (req, res, next) => {
     if (!user) {
       user = await userModel.createFromGoogleProfile(googleProfile);
     }
+    await cleanupExpiredRefreshTokens();
     const accessToken = issueAccessToken(user);
     const refreshToken = await issueRefreshToken(user.id);
 

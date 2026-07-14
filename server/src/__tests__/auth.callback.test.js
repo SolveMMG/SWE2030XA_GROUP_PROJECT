@@ -48,6 +48,7 @@ describe('GET /auth/google/callback', () => {
     userModel.findByGoogleId.mockResolvedValue(null);
     const user = { id: 'user-123', email: 'alice@example.com', name: 'Alice Example' };
     userModel.createFromGoogleProfile.mockResolvedValue(user);
+    authTokenModel.deleteExpiredRefreshTokens.mockResolvedValue(2);
     authTokenModel.createRefreshToken.mockResolvedValue({ id: 'auth-token-123' });
 
     const res = await request(app).get('/auth/google/callback?code=google-code');
@@ -72,6 +73,7 @@ describe('GET /auth/google/callback', () => {
       expect.any(String),
       expect.any(Date),
     );
+    expect(authTokenModel.deleteExpiredRefreshTokens).toHaveBeenCalledTimes(1);
     expect(res.body).toMatchObject({
       user,
       tokenType: 'Bearer',

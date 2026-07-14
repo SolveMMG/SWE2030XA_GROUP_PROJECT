@@ -1,4 +1,4 @@
-const { getOne, insert, remove } = require('./base');
+const { getOne, insert, remove, query } = require('./base');
 
 const createRefreshToken = (userId, token, expiresAt) =>
   insert('auth_tokens', { user_id: userId, token, expires_at: expiresAt });
@@ -14,4 +14,14 @@ const findUserByValidRefreshToken = (token) =>
 
 const revokeRefreshToken = (token) => remove('auth_tokens', 'token', token);
 
-module.exports = { createRefreshToken, findUserByValidRefreshToken, revokeRefreshToken };
+const deleteExpiredRefreshTokens = async () => {
+  const { rowCount } = await query('DELETE FROM auth_tokens WHERE expires_at <= NOW()');
+  return rowCount;
+};
+
+module.exports = {
+  createRefreshToken,
+  findUserByValidRefreshToken,
+  revokeRefreshToken,
+  deleteExpiredRefreshTokens,
+};
