@@ -27,6 +27,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
+  const updateUser = useCallback((user) => saveSession({ token: session.token, user }), [saveSession, session.token]);
+
   const refreshSession = useCallback(async () => {
     const response = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
     if (!response.ok) {
@@ -60,10 +62,11 @@ export function AuthProvider({ children }) {
     user: session.user,
     isAuthenticated: Boolean(session.token),
     login: saveSession,
+    updateUser,
     logout,
     refreshSession,
     authenticatedFetch,
-  }), [authenticatedFetch, logout, refreshSession, saveSession, session]);
+  }), [authenticatedFetch, logout, refreshSession, saveSession, session, updateUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
