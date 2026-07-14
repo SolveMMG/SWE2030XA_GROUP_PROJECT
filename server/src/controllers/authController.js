@@ -125,4 +125,18 @@ const refreshAccessToken = async (req, res, next) => {
   }
 };
 
-module.exports = { googleRedirect, googleCallback, refreshAccessToken };
+const logout = async (req, res, next) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    return next(new AppError(400, 'REFRESH_TOKEN_MISSING', 'Refresh token is required'));
+  }
+
+  try {
+    await authTokenModel.revokeRefreshToken(refreshToken);
+    return res.status(204).send();
+  } catch {
+    return next(new AppError(500, 'LOGOUT_FAILED', 'Unable to log out'));
+  }
+};
+
+module.exports = { googleRedirect, googleCallback, refreshAccessToken, logout };

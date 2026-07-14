@@ -1,4 +1,4 @@
-const { getOne, insert } = require('./base');
+const { getOne, insert, remove } = require('./base');
 
 const createRefreshToken = (userId, token, expiresAt) =>
   insert('auth_tokens', { user_id: userId, token, expires_at: expiresAt });
@@ -12,4 +12,6 @@ const findUserByValidRefreshToken = (token) =>
     [token],
   );
 
-module.exports = { createRefreshToken, findUserByValidRefreshToken };
+const revokeRefreshToken = (token) => remove('auth_tokens', 'token', token);
+
+module.exports = { createRefreshToken, findUserByValidRefreshToken, revokeRefreshToken };
