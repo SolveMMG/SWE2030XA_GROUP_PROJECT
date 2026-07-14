@@ -47,4 +47,17 @@ describe('GET /api/users/me', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual(user);
   });
+
+  it('uses the userId claim from an issued access token', async () => {
+    const user = { id: 'uuid-new', name: 'Alice', email: 'alice@example.com' };
+    userModel.findById.mockResolvedValue(user);
+    const token = makeToken({ userId: 'uuid-new', email: 'alice@example.com' });
+
+    const res = await request(app)
+      .get('/api/users/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(userModel.findById).toHaveBeenCalledWith('uuid-new');
+  });
 });
