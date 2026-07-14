@@ -6,9 +6,11 @@ jest.mock('../services/googleOAuth', () => ({
   fetchProfile: jest.fn(),
 }));
 jest.mock('../models/userModel');
+jest.mock('../models/authTokenModel');
 
 const googleOAuth = require('../services/googleOAuth');
 const userModel = require('../models/userModel');
+const authTokenModel = require('../models/authTokenModel');
 const app = require('../app');
 
 describe('GET /auth/google/callback', () => {
@@ -46,6 +48,7 @@ describe('GET /auth/google/callback', () => {
     userModel.findByGoogleId.mockResolvedValue(null);
     const user = { id: 'user-123', email: 'alice@example.com', name: 'Alice Example' };
     userModel.createFromGoogleProfile.mockResolvedValue(user);
+    authTokenModel.createRefreshToken.mockResolvedValue({ id: 'auth-token-123' });
 
     const res = await request(app).get('/auth/google/callback?code=google-code');
 
@@ -64,7 +67,18 @@ describe('GET /auth/google/callback', () => {
     expect(tokenPayload.userId).toBe('user-123');
     expect(tokenPayload.email).toBe('alice@example.com');
     expect(tokenPayload.exp - tokenPayload.iat).toBe(3600);
-    expect(res.body).toMatchObject({ user, tokenType: 'Bearer', expiresIn: 3600 });
+    expect(authTokenModel.createRefreshToken).toHaveBeenCalledWith(
+      'user-123',
+      expect.any(String),
+      expect.any(Date),
+    );
+    expect(res.body).toMatchObject({
+      user,
+      tokenType: 'Bearer',
+      expiresIn: 3600,
+      refreshExpiresIn: 2592000,
+    });
+    expect(res.body.refreshToken).toMatch(/^[a-f0-9]{96}$/);
   });
 
   test('returns the existing user on a subsequent Google login', async () => {
@@ -72,12 +86,18 @@ describe('GET /auth/google/callback', () => {
     googleOAuth.fetchProfile.mockResolvedValue({ id: 'google-123', email: 'alice@example.com' });
     const user = { id: 'user-123', email: 'alice@example.com', name: 'Alice' };
     userModel.findByGoogleId.mockResolvedValue(user);
+    authTokenModel.createRefreshToken.mockResolvedValue({ id: 'auth-token-123' });
 
     const res = await request(app).get('/auth/google/callback?code=google-code');
 
     expect(res.statusCode).toBe(200);
     expect(userModel.createFromGoogleProfile).not.toHaveBeenCalled();
-    expect(res.body).toMatchObject({ user, tokenType: 'Bearer', expiresIn: 3600 });
+    expect(res.body).toMatchObject({
+      user,
+      tokenType: 'Bearer',
+      expiresIn: 3600,
+      refreshExpiresIn: 2592000,
+    });
     expect(jwt.verify(res.body.accessToken, 'test-jwt-secret')).toMatchObject({
       userId: 'user-123',
       email: 'alice@example.com',

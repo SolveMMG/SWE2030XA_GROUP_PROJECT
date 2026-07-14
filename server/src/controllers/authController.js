@@ -1,7 +1,25 @@
 const AppError = require('../utils/AppError');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { exchangeCode, fetchProfile } = require('../services/googleOAuth');
+const authTokenModel = require('../models/authTokenModel');
 const userModel = require('../models/userModel');
+
+const ACCESS_TOKEN_EXPIRY_SECONDS = 60 * 60;
+const REFRESH_TOKEN_EXPIRY_SECONDS = 30 * 24 * 60 * 60;
+
+const issueAccessToken = (user) => jwt.sign(
+  { userId: user.id, email: user.email },
+  process.env.JWT_SECRET,
+  { expiresIn: `${ACCESS_TOKEN_EXPIRY_SECONDS}s` },
+);
+
+const issueRefreshToken = async (userId) => {
+  const token = crypto.randomBytes(48).toString('hex');
+  const expiresAt = new Date(Date.now() + (REFRESH_TOKEN_EXPIRY_SECONDS * 1000));
+  await authTokenModel.createRefreshToken(userId, token, expiresAt);
+  return token;
+};
 
 const googleRedirect = (req, res, next) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -66,21 +84,45 @@ const googleCallback = async (req, res, next) => {
     if (!user) {
       user = await userModel.createFromGoogleProfile(googleProfile);
     }
-    const accessToken = jwt.sign(
-      { userId: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' },
-    );
+    const accessToken = issueAccessToken(user);
+    const refreshToken = await issueRefreshToken(user.id);
 
     return res.status(200).json({
       user,
       accessToken,
       tokenType: 'Bearer',
-      expiresIn: 3600,
+      expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
+      refreshToken,
+      refreshExpiresIn: REFRESH_TOKEN_EXPIRY_SECONDS,
     });
   } catch {
     return next(new AppError(500, 'AUTHENTICATION_FAILED', 'Unable to complete authentication'));
   }
 };
 
-module.exports = { googleRedirect, googleCallback };
+const refreshAccessToken = async (req, res, next) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) {
+    return next(new AppError(400, 'REFRESH_TOKEN_MISSING', 'Refresh token is required'));
+  }
+  if (!process.env.JWT_SECRET) {
+    return next(new AppError(500, 'JWT_CONFIGURATION_ERROR', 'JWT is not configured'));
+  }
+
+  try {
+    const user = await authTokenModel.findUserByValidRefreshToken(refreshToken);
+    if (!user) {
+      return next(new AppError(401, 'INVALID_REFRESH_TOKEN', 'Refresh token is invalid or expired'));
+    }
+
+    return res.status(200).json({
+      accessToken: issueAccessToken(user),
+      tokenType: 'Bearer',
+      expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS,
+    });
+  } catch {
+    return next(new AppError(500, 'AUTHENTICATION_FAILED', 'Unable to refresh access token'));
+  }
+};
+
+module.exports = { googleRedirect, googleCallback, refreshAccessToken };
