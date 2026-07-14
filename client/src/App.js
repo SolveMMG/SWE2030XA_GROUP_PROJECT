@@ -1,5 +1,5 @@
 function App() {
-  return <main className="app-shell">SkillSwap</main>;
+  return <main className="min-h-screen bg-canvas font-sans text-ink">SkillSwap</main>;
 }
 
 export default App;
