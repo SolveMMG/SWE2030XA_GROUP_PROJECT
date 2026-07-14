@@ -1,4 +1,5 @@
 const AppError = require('../utils/AppError');
+const { exchangeCode, fetchProfile } = require('../services/googleOAuth');
 
 const googleRedirect = (req, res, next) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -25,4 +26,36 @@ const googleRedirect = (req, res, next) => {
   return res.redirect(302, authorizationUrl.toString());
 };
 
-module.exports = { googleRedirect };
+const googleCallback = async (req, res, next) => {
+  const { code } = req.query;
+
+  if (!code) {
+    return next(new AppError(400, 'OAUTH_CODE_MISSING', 'Google authorization code is required'));
+  }
+
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_CALLBACK_URL) {
+    return next(new AppError(500, 'OAUTH_CONFIGURATION_ERROR', 'Google OAuth is not configured'));
+  }
+
+  try {
+    const { access_token: accessToken } = await exchangeCode(code);
+    if (!accessToken) throw new Error('Google did not return an access token');
+
+    const profile = await fetchProfile(accessToken);
+    if (!profile.id || !profile.email) throw new Error('Google profile is missing required fields');
+
+    return res.status(200).json({
+      googleProfile: {
+        googleId: profile.id,
+        email: profile.email,
+        name: profile.name,
+        photoUrl: profile.picture,
+        emailVerified: profile.verified_email === true,
+      },
+    });
+  } catch {
+    return next(new AppError(401, 'OAUTH_AUTHENTICATION_FAILED', 'Google authentication failed'));
+  }
+};
+
+module.exports = { googleRedirect, googleCallback };
