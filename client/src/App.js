@@ -1,12 +1,13 @@
 import { PageShell } from './layouts';
 import { AppRoutes } from './routes';
+import { useAuth } from './context/AuthContext';
 
 function App() {
-  const isAuthenticated = Boolean(localStorage.getItem('skillswap_token'));
+  const { isAuthenticated, logout, user } = useAuth();
 
   return (
-    <PageShell isAuthenticated={isAuthenticated}>
-      <AppRoutes isAuthenticated={isAuthenticated} />
+    <PageShell isAuthenticated={isAuthenticated} onLogout={logout} user={user}>
+      <AppRoutes />
     </PageShell>
   );
 }
