@@ -1,9 +1,5 @@
 function App() {
-  return (
-    <div>
-      <h1>SkillSwap</h1>
-    </div>
-  );
+  return <main className="app-shell">SkillSwap</main>;
 }
 
 export default App;
