@@ -1,4 +1,5 @@
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 
 jest.mock('../services/googleOAuth', () => ({
   exchangeCode: jest.fn(),
@@ -15,6 +16,7 @@ describe('GET /auth/google/callback', () => {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackUrl: process.env.GOOGLE_CALLBACK_URL,
+    jwtSecret: process.env.JWT_SECRET,
   };
 
   beforeEach(() => {
@@ -22,12 +24,14 @@ describe('GET /auth/google/callback', () => {
     process.env.GOOGLE_CLIENT_ID = 'test-client-id';
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
     process.env.GOOGLE_CALLBACK_URL = 'http://localhost:5000/auth/google/callback';
+    process.env.JWT_SECRET = 'test-jwt-secret';
   });
 
   afterAll(() => {
     process.env.GOOGLE_CLIENT_ID = originalConfig.clientId;
     process.env.GOOGLE_CLIENT_SECRET = originalConfig.clientSecret;
     process.env.GOOGLE_CALLBACK_URL = originalConfig.callbackUrl;
+    process.env.JWT_SECRET = originalConfig.jwtSecret;
   });
 
   test('creates and returns a user on their first Google login', async () => {
@@ -56,7 +60,11 @@ describe('GET /auth/google/callback', () => {
       photoUrl: 'https://example.com/alice.jpg',
       emailVerified: true,
     });
-    expect(res.body).toEqual({ user });
+    const tokenPayload = jwt.verify(res.body.accessToken, 'test-jwt-secret');
+    expect(tokenPayload.userId).toBe('user-123');
+    expect(tokenPayload.email).toBe('alice@example.com');
+    expect(tokenPayload.exp - tokenPayload.iat).toBe(3600);
+    expect(res.body).toMatchObject({ user, tokenType: 'Bearer', expiresIn: 3600 });
   });
 
   test('returns the existing user on a subsequent Google login', async () => {
@@ -69,7 +77,11 @@ describe('GET /auth/google/callback', () => {
 
     expect(res.statusCode).toBe(200);
     expect(userModel.createFromGoogleProfile).not.toHaveBeenCalled();
-    expect(res.body).toEqual({ user });
+    expect(res.body).toMatchObject({ user, tokenType: 'Bearer', expiresIn: 3600 });
+    expect(jwt.verify(res.body.accessToken, 'test-jwt-secret')).toMatchObject({
+      userId: 'user-123',
+      email: 'alice@example.com',
+    });
   });
 
   test('rejects a callback without an authorization code', async () => {
