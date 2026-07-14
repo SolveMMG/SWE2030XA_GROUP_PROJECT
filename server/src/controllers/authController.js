@@ -1,5 +1,6 @@
 const AppError = require('../utils/AppError');
 const { exchangeCode, fetchProfile } = require('../services/googleOAuth');
+const userModel = require('../models/userModel');
 
 const googleRedirect = (req, res, next) => {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -44,14 +45,20 @@ const googleCallback = async (req, res, next) => {
     const profile = await fetchProfile(accessToken);
     if (!profile.id || !profile.email) throw new Error('Google profile is missing required fields');
 
+    const googleProfile = {
+      googleId: profile.id,
+      email: profile.email,
+      name: profile.name || profile.email.split('@')[0],
+      photoUrl: profile.picture,
+      emailVerified: profile.verified_email === true,
+    };
+    let user = await userModel.findByGoogleId(googleProfile.googleId);
+    if (!user) {
+      user = await userModel.createFromGoogleProfile(googleProfile);
+    }
+
     return res.status(200).json({
-      googleProfile: {
-        googleId: profile.id,
-        email: profile.email,
-        name: profile.name,
-        photoUrl: profile.picture,
-        emailVerified: profile.verified_email === true,
-      },
+      user,
     });
   } catch {
     return next(new AppError(401, 'OAUTH_AUTHENTICATION_FAILED', 'Google authentication failed'));

@@ -4,8 +4,10 @@ jest.mock('../services/googleOAuth', () => ({
   exchangeCode: jest.fn(),
   fetchProfile: jest.fn(),
 }));
+jest.mock('../models/userModel');
 
 const googleOAuth = require('../services/googleOAuth');
+const userModel = require('../models/userModel');
 const app = require('../app');
 
 describe('GET /auth/google/callback', () => {
@@ -28,7 +30,7 @@ describe('GET /auth/google/callback', () => {
     process.env.GOOGLE_CALLBACK_URL = originalConfig.callbackUrl;
   });
 
-  test('exchanges the code and returns the Google profile', async () => {
+  test('creates and returns a user on their first Google login', async () => {
     googleOAuth.exchangeCode.mockResolvedValue({ access_token: 'google-access-token' });
     googleOAuth.fetchProfile.mockResolvedValue({
       id: 'google-123',
@@ -37,21 +39,37 @@ describe('GET /auth/google/callback', () => {
       picture: 'https://example.com/alice.jpg',
       verified_email: true,
     });
+    userModel.findByGoogleId.mockResolvedValue(null);
+    const user = { id: 'user-123', email: 'alice@example.com', name: 'Alice Example' };
+    userModel.createFromGoogleProfile.mockResolvedValue(user);
 
     const res = await request(app).get('/auth/google/callback?code=google-code');
 
     expect(res.statusCode).toBe(200);
     expect(googleOAuth.exchangeCode).toHaveBeenCalledWith('google-code');
     expect(googleOAuth.fetchProfile).toHaveBeenCalledWith('google-access-token');
-    expect(res.body).toEqual({
-      googleProfile: {
-        googleId: 'google-123',
-        email: 'alice@example.com',
-        name: 'Alice Example',
-        photoUrl: 'https://example.com/alice.jpg',
-        emailVerified: true,
-      },
+    expect(userModel.findByGoogleId).toHaveBeenCalledWith('google-123');
+    expect(userModel.createFromGoogleProfile).toHaveBeenCalledWith({
+      googleId: 'google-123',
+      email: 'alice@example.com',
+      name: 'Alice Example',
+      photoUrl: 'https://example.com/alice.jpg',
+      emailVerified: true,
     });
+    expect(res.body).toEqual({ user });
+  });
+
+  test('returns the existing user on a subsequent Google login', async () => {
+    googleOAuth.exchangeCode.mockResolvedValue({ access_token: 'google-access-token' });
+    googleOAuth.fetchProfile.mockResolvedValue({ id: 'google-123', email: 'alice@example.com' });
+    const user = { id: 'user-123', email: 'alice@example.com', name: 'Alice' };
+    userModel.findByGoogleId.mockResolvedValue(user);
+
+    const res = await request(app).get('/auth/google/callback?code=google-code');
+
+    expect(res.statusCode).toBe(200);
+    expect(userModel.createFromGoogleProfile).not.toHaveBeenCalled();
+    expect(res.body).toEqual({ user });
   });
 
   test('rejects a callback without an authorization code', async () => {
