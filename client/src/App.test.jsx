@@ -38,7 +38,7 @@ test('renders SkillSwap brand in navbar', () => {
   expect(screen.getByText(/skillswap/i)).toBeInTheDocument();
 });
 
-test('shows Browse Skills heading on home page', () => {
+test('shows Find Student Talent hero heading on home page', () => {
   render(<App />, { wrapper: Wrapper });
-  expect(screen.getByRole('heading', { name: /browse skills/i })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /find student talent/i })).toBeInTheDocument();
 });

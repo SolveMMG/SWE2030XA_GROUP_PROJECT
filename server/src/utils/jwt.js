@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
 
 const ACCESS_EXPIRY = '1h';
 const REFRESH_EXPIRY_DAYS = 30;
@@ -12,7 +13,7 @@ function verifyAccess(token) {
 }
 
 function signRefresh(payload) {
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: `${REFRESH_EXPIRY_DAYS}d` });
+  return jwt.sign({ ...payload, jti: uuidv4() }, process.env.JWT_REFRESH_SECRET, { expiresIn: `${REFRESH_EXPIRY_DAYS}d` });
 }
 
 function verifyRefresh(token) {
