@@ -26,7 +26,9 @@ export default function AuthCallbackPage() {
     login(userData, token, refreshToken);
 
     const isNewUser = params.get('isNewUser') === '1';
-    navigate(isNewUser ? '/profile' : '/');
+    const redirect = localStorage.getItem('redirectAfterLogin');
+    localStorage.removeItem('redirectAfterLogin');
+    navigate(isNewUser ? '/profile' : (redirect || '/'));
   }, [login, navigate]);
 
   return (
