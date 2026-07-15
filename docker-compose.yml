@@ -13,7 +13,7 @@ services:
     ports:
       - '5432:5432'
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-skillswap}']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-skillswap} -d ${POSTGRES_DB:-skillswap_dev}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,7 +42,7 @@ services:
       target: development
     restart: unless-stopped
     environment:
-      REACT_APP_API_URL: http://localhost:5000/api
+      VITE_API_URL: http://localhost:5000/api
     volumes:
       - ./client:/app
       - /app/node_modules

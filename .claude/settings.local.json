@@ -6,7 +6,17 @@
       "Bash(git pull *)",
       "Bash(npm install *)",
       "Bash(npm run *)",
-      "Bash(npm test *)"
+      "Bash(npm test *)",
+      "Bash(openssl rand:*)",
+      "Bash(docker --version && docker-compose --version 2>/dev/null; sudo ss -tlnp | grep 5432)",
+      "Bash(docker compose:*)",
+      "Bash(apt-cache search:*)",
+      "Read(//usr/local/lib/docker/**)",
+      "Read(//home/mikemur/.docker/**)",
+      "Bash(cd /home/mikemur/Documents/SWE2030XA_GROUP_PROJECT/client/src && mv index.js index.jsx && mv App.js App.jsx && mv App.test.js App.test.jsx)",
+      "Bash(DATABASE_URL=postgresql://skillswap:skillswap@localhost:5432/skillswap_dev node src/db/migrate.js 2>&1)",
+      "Bash(sudo chown:*)",
+      "Bash(git add:*)"
     ]
   }
 }
