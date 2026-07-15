@@ -1,8 +1,14 @@
+import { PageShell } from './layouts';
+import { AppRoutes } from './routes';
+import { useAuth } from './context/AuthContext';
+
 function App() {
+  const { isAuthenticated, logout, user } = useAuth();
+
   return (
-    <div>
-      <h1>SkillSwap</h1>
-    </div>
+    <PageShell isAuthenticated={isAuthenticated} onLogout={logout} user={user}>
+      <AppRoutes />
+    </PageShell>
   );
 }
 
