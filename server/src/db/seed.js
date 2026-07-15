@@ -11,7 +11,7 @@ const USERS = Array.from({ length: 10 }, (_, i) => ({
           `david${i}@university.ac.ke`,`eve${i}@university.ac.ke`,`frank${i}@university.ac.ke`,
           `grace${i}@university.ac.ke`,`henry${i}@university.ac.ke`,`ivy${i}@university.ac.ke`,
           `james${i}@university.ac.ke`][i],
-  bio: `Hi, I\'m a university student passionate about sharing my skills.`,
+  bio: `Hi, I'm a university student passionate about sharing my skills.`,
   skills: [CATEGORIES[i % CATEGORIES.length], CATEGORIES[(i + 1) % CATEGORIES.length]],
 }));
 
@@ -95,7 +95,7 @@ async function seed() {
       const { rows } = await client.query(
         `INSERT INTO inquiries (listing_id, buyer_id, message, status)
          VALUES ($1,$2,$3,$4) RETURNING id`,
-        [listing.id, buyerId, `Hi, I\'m interested in your service. Can we discuss?`, status]
+        [listing.id, buyerId, `Hi, I'm interested in your service. Can we discuss?`, status]
       );
       inquiryIds.push({ id: rows[0].id, buyerId, sellerId: listing.sellerId, status });
     }
