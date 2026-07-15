@@ -1,11 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../api';
+
+function InquiriesLink({ count, onClick, className }) {
+  return (
+    <Link to="/inquiries" onClick={onClick} className={`relative ${className}`}>
+      Inquiries
+      {count > 0 && (
+        <span className="absolute -top-1 -right-2 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
+          {count > 9 ? '9+' : count}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 export default function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenu] = useState(false);
+  const [pendingCount, setPending] = useState(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) { setPending(0); return; }
+    api.get('/inquiries?role=received')
+      .then(({ data }) => {
+        const count = data.filter((i) => i.status === 'pending').length;
+        setPending(count);
+      })
+      .catch(() => {});
+  }, [isAuthenticated]);
 
   async function handleLogout() {
     await logout();
@@ -33,9 +58,7 @@ export default function Navbar() {
               <Link to="/my-listings" className="px-2 py-1 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100 transition-colors">
                 My Listings
               </Link>
-              <Link to="/inquiries" className="px-2 py-1 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100 transition-colors">
-                Inquiries
-              </Link>
+              <InquiriesLink count={pendingCount} className="px-2 py-1 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100 transition-colors" />
               <Link to="/profile" className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-100 transition-colors">
                 {user.photoUrl ? (
                   <img src={user.photoUrl} className="w-7 h-7 rounded-full object-cover" alt={user.name} />
@@ -105,9 +128,7 @@ export default function Navbar() {
               <Link to="/my-listings" onClick={() => setMenu(false)} className="px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg">
                 My Listings
               </Link>
-              <Link to="/inquiries" onClick={() => setMenu(false)} className="px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg">
-                Inquiries
-              </Link>
+              <InquiriesLink count={pendingCount} onClick={() => setMenu(false)} className="px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg" />
               <Link to="/profile" onClick={() => setMenu(false)} className="px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg">
                 Profile
               </Link>
