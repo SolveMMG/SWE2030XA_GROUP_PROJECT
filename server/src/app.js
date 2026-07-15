@@ -26,6 +26,7 @@ app.use('/api/v1/uploads',   require('./routes/uploads'));
 app.use('/api/v1/inquiries', require('./routes/inquiries'));
 app.use('/api/v1/reviews',   require('./routes/reviews'));
 
+
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
 app.use(errorHandler);
