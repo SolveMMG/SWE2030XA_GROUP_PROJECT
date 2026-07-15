@@ -1,10 +1,18 @@
-const { getOne, update, remove, query } = require('./base');
+const { getOne, insert, update, remove, query } = require('./base');
 
 const findById = (id) =>
   getOne('SELECT * FROM users WHERE id = $1', [id]);
 
 const findByGoogleId = (googleId) =>
   getOne('SELECT * FROM users WHERE google_id = $1', [googleId]);
+
+const createFromGoogleProfile = ({ googleId, email, name, photoUrl }) =>
+  insert('users', {
+    google_id: googleId,
+    email,
+    name,
+    photo_url: photoUrl || null,
+  });
 
 const updateById = (id, data) =>
   update('users', { ...data, updated_at: new Date() }, 'id', id);
@@ -32,4 +40,11 @@ const findPublicById = async (id) => {
   return rows[0] ?? null;
 };
 
-module.exports = { findById, findByGoogleId, updateById, deleteById, findPublicById };
+module.exports = {
+  findById,
+  findByGoogleId,
+  createFromGoogleProfile,
+  updateById,
+  deleteById,
+  findPublicById,
+};
