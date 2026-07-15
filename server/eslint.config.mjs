@@ -10,6 +10,12 @@ export default [
         ...globals.node,
       },
     },
+    rules: {
+      'no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      }],
+    },
   },
   {
     files: ['**/*.test.js'],

@@ -31,6 +31,7 @@ export default [
     languageOptions: {
       globals: {
         ...globals.jest,
+        vi: 'readonly',
       },
     },
   },

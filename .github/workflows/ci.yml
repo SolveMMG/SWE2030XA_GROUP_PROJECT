@@ -42,6 +42,8 @@ jobs:
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/skillswap_test
           JWT_SECRET: ci-test-secret
+          JWT_REFRESH_SECRET: ci-test-refresh-secret
+          CLIENT_URL: http://localhost:3000
           SESSION_SECRET: ci-session-secret
           NODE_ENV: test
 

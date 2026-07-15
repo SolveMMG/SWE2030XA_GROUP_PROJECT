@@ -39,7 +39,7 @@ router.get('/google/callback',
       });
 
       res.redirect(`${process.env.CLIENT_URL}/auth/callback?${params}`);
-    } catch (err) {
+    } catch {
       res.redirect(`${process.env.CLIENT_URL}/login?error=server`);
     }
   }
