@@ -34,6 +34,7 @@ export default function MarketplacePage() {
   const [listings, setListings]   = useState([]);
   const [page, setPage]           = useState(1);
   const [totalPages, setTotal]    = useState(1);
+  const [total, setTotalCount]    = useState(null);
   const [search, setSearch]       = useState('');
   const [category, setCategory]   = useState('');
   const [loading, setLoading]     = useState(true);
@@ -48,6 +49,7 @@ export default function MarketplacePage() {
       const { data } = await api.get(`/listings?${new URLSearchParams(params)}`);
       setListings(data.listings);
       setTotal(data.totalPages);
+      setTotalCount(data.total ?? null);
     } catch {
       setListings([]);
     } finally {
@@ -129,6 +131,16 @@ export default function MarketplacePage() {
           ))}
         </div>
       </div>
+
+      {/* Result count */}
+      {!loading && (search || category) && total !== null && (
+        <p className="text-sm text-gray-500 mb-4">
+          {total === 0
+            ? 'No results found'
+            : `${total} result${total === 1 ? '' : 's'} found${search ? ` for "${search}"` : ''}${category ? ` in ${category}` : ''}`
+          }
+        </p>
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
