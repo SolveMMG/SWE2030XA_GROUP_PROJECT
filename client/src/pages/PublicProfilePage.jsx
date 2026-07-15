@@ -22,11 +22,11 @@ export default function PublicProfilePage() {
       try {
         const [{ data: user }, { data: allL }, { data: rev }] = await Promise.all([
           api.get(`/users/${id}`),
-          api.get('/listings?limit=100'),
+          api.get(`/listings?sellerId=${id}&limit=100`),
           api.get(`/reviews?sellerId=${id}`),
         ]);
         setProfile(user);
-        setListings(allL.listings.filter((l) => l.seller_id === parseInt(id)));
+        setListings(allL.listings);
         setReviews(rev);
       } catch {
         // leave null → show not found

@@ -18,7 +18,7 @@ router.get('/',
       const page  = parseInt(req.query.page)  || 1;
       const limit = parseInt(req.query.limit) || 20;
       const offset = (page - 1) * limit;
-      const { search, category } = req.query;
+      const { search, category, sellerId } = req.query;
 
       const conditions = [];
       const params = [];
@@ -30,6 +30,10 @@ router.get('/',
       if (category && CATEGORIES.includes(category)) {
         params.push(category);
         conditions.push(`l.category = $${params.length}`);
+      }
+      if (sellerId && !isNaN(parseInt(sellerId))) {
+        params.push(parseInt(sellerId));
+        conditions.push(`l.seller_id = $${params.length}`);
       }
 
       const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';

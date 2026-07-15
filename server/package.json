@@ -5,20 +5,6 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-<<<<<<< HEAD
-    "lint": "eslint src --ext .js",
-    "test": "jest --forceExit",
-    "migrate:up": "node-pg-migrate up --migrations-dir migrations --database-url-var DATABASE_URL",
-    "migrate:down": "node-pg-migrate down --migrations-dir migrations --database-url-var DATABASE_URL"
-  },
-  "dependencies": {
-    "dotenv": "^17.4.2",
-    "express": "^4.19.2",
-    "express-validator": "^7.3.2",
-    "jsonwebtoken": "^9.0.3",
-    "node-pg-migrate": "^7.9.1",
-    "pg": "^8.22.0"
-=======
     "lint": "eslint src",
     "test": "jest --forceExit --runInBand",
     "migrate": "node src/db/migrate.js",
@@ -40,7 +26,6 @@
     "passport-google-oauth20": "^2.0.0",
     "pg": "^8.12.0",
     "uuid": "^10.0.0"
->>>>>>> 2eedb49 (feat: implement authentication and authorization middleware)
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

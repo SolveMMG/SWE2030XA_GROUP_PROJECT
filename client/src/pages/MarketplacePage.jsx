@@ -3,7 +3,15 @@ import api from '../api';
 import ListingCard from '../components/ListingCard';
 import Button from '../components/Button';
 
-const CATEGORIES = ['design', 'programming', 'writing', 'tutoring', 'music', 'photography', 'other'];
+const CATEGORY_META = [
+  { key: 'design',      emoji: '🎨', label: 'Design' },
+  { key: 'programming', emoji: '💻', label: 'Programming' },
+  { key: 'writing',     emoji: '✍️', label: 'Writing' },
+  { key: 'tutoring',    emoji: '📚', label: 'Tutoring' },
+  { key: 'music',       emoji: '🎵', label: 'Music' },
+  { key: 'photography', emoji: '📷', label: 'Photography' },
+  { key: 'other',       emoji: '✨', label: 'Other' },
+];
 
 function CardSkeleton() {
   return (
@@ -41,7 +49,6 @@ export default function MarketplacePage() {
       setListings(data.listings);
       setTotal(data.totalPages);
     } catch {
-      // show empty state on error
       setListings([]);
     } finally {
       setLoading(false);
@@ -63,9 +70,33 @@ export default function MarketplacePage() {
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Browse Skills</h1>
 
+      {/* Hero */}
+      <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-8 mb-8 text-white">
+        <h1 className="text-3xl font-bold mb-1">Find Student Talent</h1>
+        <p className="text-blue-100 mb-6 text-sm">
+          Hire skilled students. Share what you know. Exchange services peer-to-peer.
+        </p>
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+          {CATEGORY_META.map(({ key, emoji, label }) => (
+            <button
+              key={key}
+              onClick={() => toggleCategory(key)}
+              className={`flex flex-col items-center gap-1 p-2.5 rounded-xl text-xs font-medium transition-all ${
+                category === key
+                  ? 'bg-white text-blue-700 shadow-md'
+                  : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+            >
+              <span className="text-2xl leading-none">{emoji}</span>
+              <span className="leading-tight text-center">{label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Search + filter row */}
+      <div className="mb-6">
         <form onSubmit={handleSearch} className="flex gap-2 mb-4">
           <input
             value={searchInput}
@@ -82,17 +113,18 @@ export default function MarketplacePage() {
         </form>
 
         <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map((cat) => (
+          {CATEGORY_META.map(({ key, emoji, label }) => (
             <button
-              key={cat}
-              onClick={() => toggleCategory(cat)}
-              className={`px-3 py-1 rounded-full text-sm font-medium capitalize border transition-colors ${
-                category === cat
+              key={key}
+              onClick={() => toggleCategory(key)}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                category === key
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
               }`}
             >
-              {cat}
+              <span>{emoji}</span>
+              <span className="capitalize">{label}</span>
             </button>
           ))}
         </div>

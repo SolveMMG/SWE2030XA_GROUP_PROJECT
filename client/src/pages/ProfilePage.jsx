@@ -31,11 +31,11 @@ export default function ProfilePage() {
       try {
         const [{ data: me }, { data: allL }, { data: rev }] = await Promise.all([
           api.get('/users/me'),
-          api.get('/listings?limit=100'),
+          api.get(`/listings?sellerId=${user?.id}&limit=100`),
           api.get(`/reviews?sellerId=${user?.id}`),
         ]);
         setProfile(me);
-        setListings(allL.listings.filter((l) => l.seller_id === user?.id));
+        setListings(allL.listings);
         setReviews(rev);
         setForm({ name: me.name, bio: me.bio ?? '', skills: me.skills ?? [] });
       } catch {

@@ -3,17 +3,44 @@ import Card from './Card';
 import Badge from './Badge';
 import StarRating from './StarRating';
 
-const PLACEHOLDER = 'https://placehold.co/400x240/e2e8f0/94a3b8?text=No+Image';
+const CATEGORY_STYLES = {
+  design:      { bg: '#ede9fe', color: '#7c3aed', emoji: '🎨' },
+  programming: { bg: '#dbeafe', color: '#1d4ed8', emoji: '💻' },
+  writing:     { bg: '#fef3c7', color: '#b45309', emoji: '✍️' },
+  tutoring:    { bg: '#dcfce7', color: '#15803d', emoji: '📚' },
+  music:       { bg: '#fce7f3', color: '#be185d', emoji: '🎵' },
+  photography: { bg: '#ffedd5', color: '#c2410c', emoji: '📷' },
+  other:       { bg: '#f1f5f9', color: '#475569', emoji: '✨' },
+};
+
+function CategoryPlaceholder({ category }) {
+  const s = CATEGORY_STYLES[category] || CATEGORY_STYLES.other;
+  return (
+    <div
+      className="w-full h-44 flex flex-col items-center justify-center gap-1 select-none"
+      style={{ backgroundColor: s.bg }}
+    >
+      <span className="text-5xl leading-none">{s.emoji}</span>
+      <span className="text-sm font-semibold mt-1 capitalize" style={{ color: s.color }}>
+        {category}
+      </span>
+    </div>
+  );
+}
 
 export default function ListingCard({ listing }) {
   return (
     <Link to={`/listings/${listing.id}`} className="block group">
       <Card className="overflow-hidden hover:shadow-md transition-shadow h-full">
-        <img
-          src={listing.image_url || PLACEHOLDER}
-          alt={listing.title}
-          className="w-full h-44 object-cover"
-        />
+        {listing.image_url ? (
+          <img
+            src={listing.image_url}
+            alt={listing.title}
+            className="w-full h-44 object-cover"
+          />
+        ) : (
+          <CategoryPlaceholder category={listing.category} />
+        )}
         <div className="p-4">
           <div className="flex items-start justify-between gap-2 mb-1">
             <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 line-clamp-1 flex-1">

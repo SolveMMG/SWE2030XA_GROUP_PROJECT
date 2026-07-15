@@ -18,9 +18,8 @@ export default function MyListingsPage() {
   useEffect(() => {
     async function load() {
       try {
-        // Fetch up to 100 listings then filter by seller_id (no seller-filter endpoint)
-        const { data } = await api.get('/listings?limit=100');
-        setListings(data.listings.filter((l) => l.seller_id === user?.id));
+        const { data } = await api.get(`/listings?sellerId=${user?.id}&limit=100`);
+        setListings(data.listings);
       } catch {
         // leave empty
       } finally {

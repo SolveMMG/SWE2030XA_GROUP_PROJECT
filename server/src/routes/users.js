@@ -1,16 +1,4 @@
 const express = require('express');
-<<<<<<< HEAD
-const router = express.Router();
-const auth = require('../middleware/auth');
-const validate = require('../middleware/validate');
-const { updateMeRules, getUserRules } = require('../middleware/userValidators');
-const { getMe, updateMe, getUser, deleteMe } = require('../controllers/userController');
-
-router.get('/me', auth, getMe);
-router.put('/me', auth, updateMeRules, validate, updateMe);
-router.delete('/me', auth, deleteMe);
-router.get('/:id', getUserRules, validate, getUser);
-=======
 const { body, param } = require('express-validator');
 const requireAuth = require('../middleware/auth');
 const validate = require('../middleware/validate');
@@ -81,6 +69,5 @@ router.delete('/me', requireAuth, async (req, res, next) => {
     res.json({ ok: true });
   } catch (err) { next(err); }
 });
->>>>>>> 2eedb49 (feat: implement authentication and authorization middleware)
 
 module.exports = router;
