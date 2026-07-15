@@ -1,28 +1,27 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
-export default function Modal({ open, onClose, title, children }) {
+export default function Modal({ children, isOpen, onClose, title }) {
   useEffect(() => {
-    if (open) document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, [open]);
+    if (!isOpen) return undefined;
+    const onKeyDown = (event) => event.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
 
-  if (!open) return null;
+  if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
-          >
-            &times;
-          </button>
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="presentation">
+      <button className="absolute inset-0 cursor-default bg-ink/45" aria-label="Close dialog" onClick={onClose} />
+      <section className="relative z-10 w-full max-w-lg rounded-2xl bg-surface p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          {title && <h2 id="modal-title" className="font-display text-xl font-bold text-ink">{title}</h2>}
+          <button className="rounded-lg p-1 text-muted hover:bg-slate-100 hover:text-ink" aria-label="Close dialog" onClick={onClose}>×</button>
         </div>
         {children}
-      </div>
-    </div>
+      </section>
+    </div>,
+    document.body,
   );
 }

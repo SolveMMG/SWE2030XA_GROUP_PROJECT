@@ -1,52 +1,78 @@
-import { createContext, useContext, useState, useCallback } from 'react';
-import api from '../api';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 const AuthContext = createContext(null);
+const STORAGE_KEY = 'skillswap_auth';
 
-function readUser() {
+function readStoredSession() {
   try {
-    return JSON.parse(localStorage.getItem('user'));
+    const session = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return session?.token ? session : { token: null, user: null };
   } catch {
-    return null;
+    return { token: null, user: null };
   }
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(readUser);
+  const [session, setSession] = useState(readStoredSession);
 
-  const login = useCallback((userData, token, refreshToken) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('refreshToken', refreshToken);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
+  const saveSession = useCallback((nextSession) => {
+    const normalized = { token: nextSession.token || nextSession.accessToken, user: nextSession.user || null };
+    setSession(normalized);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    return normalized;
   }, []);
 
-  const logout = useCallback(async () => {
-    const rt = localStorage.getItem('refreshToken');
-    if (rt) {
-      api.post('/auth/logout', { refreshToken: rt }).catch(() => {});
+  const logout = useCallback(() => {
+    setSession({ token: null, user: null });
+    localStorage.removeItem(STORAGE_KEY);
+  }, []);
+
+  const updateUser = useCallback((user) => saveSession({ token: session.token, user }), [saveSession, session.token]);
+
+  const refreshSession = useCallback(async () => {
+    const response = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+    if (!response.ok) {
+      logout();
+      return null;
     }
-    localStorage.clear();
-    setUser(null);
-  }, []);
 
-  const updateUser = useCallback((updates) => {
-    setUser((prev) => {
-      const updated = { ...prev, ...updates };
-      localStorage.setItem('user', JSON.stringify(updated));
-      return updated;
+    const refreshed = await response.json();
+    return saveSession(refreshed.data || refreshed);
+  }, [logout, saveSession]);
+
+  const authenticatedFetch = useCallback(async (url, options = {}) => {
+    const request = (token) => fetch(url, {
+      ...options,
+      credentials: 'include',
+      headers: { ...options.headers, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     });
-  }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, isAuthenticated: !!user }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    let response = await request(session.token);
+    if (response.status !== 401) return response;
+
+    const refreshed = await refreshSession();
+    if (!refreshed?.token) return response;
+    response = await request(refreshed.token);
+    if (response.status === 401) logout();
+    return response;
+  }, [logout, refreshSession, session.token]);
+
+  const value = useMemo(() => ({
+    token: session.token,
+    user: session.user,
+    isAuthenticated: Boolean(session.token),
+    login: saveSession,
+    updateUser,
+    logout,
+    refreshSession,
+    authenticatedFetch,
+  }), [authenticatedFetch, logout, refreshSession, saveSession, session, updateUser]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
-  return ctx;
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used inside an AuthProvider');
+  return context;
 }
