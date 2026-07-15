@@ -4,18 +4,13 @@ on:
   push:
     branches: [main]
 
-# Requires branch protection: CI must pass before this runs.
-# Add RENDER_DEPLOY_HOOK_SERVER and RENDER_DEPLOY_HOOK_CLIENT
-# to repo Settings → Secrets and variables → Actions.
+# Deployment is manual for now.
+# To enable: add RENDER_DEPLOY_HOOK_SERVER and RENDER_DEPLOY_HOOK_CLIENT
+# to repo Settings → Secrets and variables → Actions, then restore the deploy steps.
 
 jobs:
-  deploy:
-    name: Deploy to Render
+  placeholder:
+    name: CD placeholder
     runs-on: ubuntu-latest
-
     steps:
-      - name: Trigger server deploy
-        run: curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK_SERVER }}"
-
-      - name: Trigger client deploy
-        run: curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK_CLIENT }}"
+      - run: echo "Deployment hooks not configured yet — skipping."
