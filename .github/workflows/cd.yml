@@ -4,9 +4,7 @@ on:
   push:
     branches: [main]
 
-# Requires branch protection: CI must pass before this runs.
-# Add RENDER_DEPLOY_HOOK_SERVER and RENDER_DEPLOY_HOOK_CLIENT
-# to repo Settings → Secrets and variables → Actions.
+
 
 jobs:
   deploy:
