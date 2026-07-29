@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Badge, Button, Card } from '../components';
 import { useAuth } from '../context/AuthContext';
-import { apiRequest } from '../services/api';
+import api from '../api';
 
 export default function ProfilePage() {
-  const { authenticatedFetch, user: sessionUser } = useAuth();
+  const { user: sessionUser } = useAuth();
   const [profile, setProfile] = useState(sessionUser);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -14,12 +14,10 @@ export default function ProfilePage() {
 
     async function loadProfile() {
       try {
-        const response = await apiRequest(authenticatedFetch, '/users/me');
-        if (!response.ok) throw new Error('We could not load your profile.');
-        const data = await response.json();
+        const { data } = await api.get('/users/me');
         if (active) setProfile(data);
-      } catch (requestError) {
-        if (active) setError(requestError.message);
+      } catch {
+        if (active) setError('We could not load your profile.');
       } finally {
         if (active) setIsLoading(false);
       }
@@ -27,7 +25,7 @@ export default function ProfilePage() {
 
     loadProfile();
     return () => { active = false; };
-  }, [authenticatedFetch]);
+  }, []);
 
   if (isLoading) return <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8"><Card>Loading your profile…</Card></section>;
   if (error) return <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8"><Card><p className="text-red-600">{error}</p></Card></section>;

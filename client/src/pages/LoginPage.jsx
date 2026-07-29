@@ -1,5 +1,7 @@
 import { Card } from '../components';
 
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
+
 export default function LoginPage() {
   return (
     <section className="mx-auto flex min-h-[calc(100vh-8.5rem)] max-w-md items-center px-4 py-18">
@@ -9,7 +11,7 @@ export default function LoginPage() {
         <p className="mt-3 leading-7 text-muted">Sign in with Google to find people who share your curiosity.</p>
 
         <a
-          href="/auth/google"
+          href={`${API_BASE}/v1/auth/google`}
           className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-ink transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">

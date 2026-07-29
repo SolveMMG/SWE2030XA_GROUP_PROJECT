@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Input } from '../components';
 import { useAuth } from '../context/AuthContext';
-import { apiRequest } from '../services/api';
+import api from '../api';
 
 const emptyForm = { name: '', bio: '', skills: '', photo_url: '' };
 
 export default function ProfileEditPage() {
   const navigate = useNavigate();
-  const { authenticatedFetch, updateUser, user } = useAuth();
+  const { updateUser, user } = useAuth();
   const [form, setForm] = useState(emptyForm);
   const [image, setImage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,24 +19,22 @@ export default function ProfileEditPage() {
     let active = true;
     async function loadProfile() {
       try {
-        const response = await apiRequest(authenticatedFetch, '/users/me');
-        if (!response.ok) throw new Error('We could not load your profile.');
-        const profile = await response.json();
+        const { data: profile } = await api.get('/users/me');
         if (active) setForm({
           name: profile.name || '',
           bio: profile.bio || '',
           skills: (profile.skills || []).join(', '),
           photo_url: profile.photo_url || '',
         });
-      } catch (requestError) {
-        if (active) setError(requestError.message);
+      } catch {
+        if (active) setError('We could not load your profile.');
       } finally {
         if (active) setIsLoading(false);
       }
     }
     loadProfile();
     return () => { active = false; };
-  }, [authenticatedFetch]);
+  }, []);
 
   const updateField = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
 
@@ -50,26 +48,28 @@ export default function ProfileEditPage() {
       if (image) {
         const uploadBody = new FormData();
         uploadBody.append('image', image);
-        const uploadResponse = await authenticatedFetch('/uploads/image', { method: 'POST', body: uploadBody });
-        if (!uploadResponse.ok) throw new Error('Your photo could not be uploaded.');
-        const upload = await uploadResponse.json();
-        photoUrl = upload.url || upload.imageUrl || upload.data?.url;
-        if (!photoUrl) throw new Error('The upload service did not return an image URL.');
+        try {
+          const { data: upload } = await api.post('/uploads/image', uploadBody);
+          photoUrl = upload.url;
+          if (!photoUrl) throw new Error();
+        } catch {
+          throw new Error('Your photo could not be uploaded.');
+        }
       }
 
-      const response = await apiRequest(authenticatedFetch, '/users/me', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      let updatedProfile;
+      try {
+        const { data } = await api.put('/users/me', {
           name: form.name.trim(),
           bio: form.bio.trim() || null,
           skills: form.skills.split(',').map((skill) => skill.trim()).filter(Boolean),
-          photo_url: photoUrl || null,
-        }),
-      });
-      if (!response.ok) throw new Error('Your changes could not be saved.');
+          photoUrl: photoUrl || null,
+        });
+        updatedProfile = data;
+      } catch {
+        throw new Error('Your changes could not be saved.');
+      }
 
-      const updatedProfile = await response.json();
       updateUser({ ...user, ...updatedProfile });
       navigate('/profile');
     } catch (requestError) {
