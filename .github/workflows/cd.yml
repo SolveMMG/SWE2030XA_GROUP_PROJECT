@@ -1,16 +1,31 @@
 name: CD
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
 
-# Deployment is manual for now.
-# To enable: add RENDER_DEPLOY_HOOK_SERVER and RENDER_DEPLOY_HOOK_CLIENT
-# to repo Settings → Secrets and variables → Actions, then restore the deploy steps.
+# Render setup (services + deploy hooks) lives in render.yaml — see README
+# "First-time Render setup". Until RENDER_DEPLOY_HOOK_SERVER/CLIENT are added
+# under Settings → Secrets and variables → Actions, these steps no-op instead
+# of failing the workflow.
 
 jobs:
-  placeholder:
-    name: CD placeholder
+  deploy:
+    name: Deploy to Render
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
     steps:
-      - run: echo "Deployment hooks not configured yet — skipping."
+      - name: Trigger server deploy
+        if: ${{ secrets.RENDER_DEPLOY_HOOK_SERVER != '' }}
+        run: curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK_SERVER }}"
+
+      - name: Trigger client deploy
+        if: ${{ secrets.RENDER_DEPLOY_HOOK_CLIENT != '' }}
+        run: curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK_CLIENT }}"
+
+      - name: No deploy hooks configured
+        if: ${{ secrets.RENDER_DEPLOY_HOOK_SERVER == '' && secrets.RENDER_DEPLOY_HOOK_CLIENT == '' }}
+        run: echo "RENDER_DEPLOY_HOOK_SERVER/CLIENT not set yet — skipping deploy. See README for setup."

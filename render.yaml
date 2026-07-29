@@ -1,0 +1,67 @@
+databases:
+  - name: skillswap-db
+    plan: free
+
+services:
+  - name: skillswap-server
+    type: web
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: server
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+    healthCheckPath: /api/health
+    autoDeployTrigger: off
+    preDeployCommand: npm run migrate
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: skillswap-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      # Predictable from the service names below — verify against the URLs Render
+      # actually assigns after first creation (it appends a suffix on name collision)
+      # and update here + in the Render dashboard if they differ.
+      - key: CLIENT_URL
+        value: https://skillswap-client.onrender.com
+      - key: GOOGLE_CALLBACK_URL
+        value: https://skillswap-server.onrender.com/api/v1/auth/google/callback
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+
+  - name: skillswap-client
+    type: web
+    runtime: static
+    rootDir: client
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    autoDeployTrigger: off
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://skillswap-server.onrender.com/api
