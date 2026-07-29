@@ -94,6 +94,7 @@ describe('GET /api/v1/users/:id', () => {
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(userId);
     expect(res.body.google_id).toBeUndefined();
+    expect(res.body.email).toBeUndefined();
     expect(res.body.avg_rating).toBeDefined();
   });
 
