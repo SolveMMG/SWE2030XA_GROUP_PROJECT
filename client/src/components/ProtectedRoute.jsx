@@ -6,7 +6,11 @@ export default function ProtectedRoute({ children }) {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const intended = location.pathname + location.search;
+    if (intended !== '/' && intended !== '/login') {
+      localStorage.setItem('redirectAfterLogin', intended);
+    }
+    return <Navigate to="/login" replace />;
   }
 
   return children;

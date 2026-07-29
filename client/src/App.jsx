@@ -11,7 +11,9 @@ import EditListingPage    from './pages/EditListingPage';
 import MyListingsPage     from './pages/MyListingsPage';
 import InquiriesPage      from './pages/InquiriesPage';
 import ProfilePage        from './pages/ProfilePage';
+import ProfileEditPage    from './pages/ProfileEditPage';
 import PublicProfilePage  from './pages/PublicProfilePage';
+import NotFoundPage       from './pages/NotFoundPage';
 
 export default function App() {
   return (
@@ -33,6 +35,10 @@ export default function App() {
         <Route path="/my-listings"    element={<ProtectedRoute><MyListingsPage /></ProtectedRoute>} />
         <Route path="/inquiries"      element={<ProtectedRoute><InquiriesPage /></ProtectedRoute>} />
         <Route path="/profile"        element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/profile/edit"   element={<ProtectedRoute><ProfileEditPage /></ProtectedRoute>} />
+
+        {/* Catch-all */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
   );

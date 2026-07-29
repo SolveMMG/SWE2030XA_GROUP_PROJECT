@@ -1,7 +1,7 @@
-export default function Card({ children, className = '' }) {
+export default function Card({ children, className = '', padding = 'p-6', ...props }) {
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 ${className}`}>
+    <section {...props} className={`rounded-2xl bg-surface shadow-card ${padding} ${className}`}>
       {children}
-    </div>
+    </section>
   );
 }

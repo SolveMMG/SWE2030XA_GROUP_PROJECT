@@ -19,7 +19,10 @@ export default function AuthCallbackPage() {
     api.post('/auth/exchange', { code })
       .then(({ data }) => {
         login(data.user, data.token);
-        navigate(data.user.isNewUser ? '/profile' : '/', { replace: true });
+
+        const redirect = localStorage.getItem('redirectAfterLogin');
+        localStorage.removeItem('redirectAfterLogin');
+        navigate(data.user.isNewUser ? '/profile' : (redirect || '/'), { replace: true });
       })
       .catch(() => {
         navigate('/login?error=callback', { replace: true });

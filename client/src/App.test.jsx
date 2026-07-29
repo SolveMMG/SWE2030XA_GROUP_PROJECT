@@ -15,7 +15,7 @@ vi.mock('./api/index', () => ({
   },
 }));
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
@@ -33,12 +33,14 @@ function Wrapper({ children }) {
   );
 }
 
-test('renders SkillSwap brand in navbar', () => {
+test('renders SkillSwap brand in navbar', async () => {
   render(<App />, { wrapper: Wrapper });
-  expect(screen.getByText(/skillswap/i)).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByText(/skillswap/i)).toBeInTheDocument());
 });
 
-test('shows Find Student Talent hero heading on home page', () => {
+test('shows Find Student Talent heading on home page', async () => {
   render(<App />, { wrapper: Wrapper });
-  expect(screen.getByRole('heading', { name: /find student talent/i })).toBeInTheDocument();
+  await waitFor(() =>
+    expect(screen.getByRole('heading', { name: /find student talent/i })).toBeInTheDocument()
+  );
 });

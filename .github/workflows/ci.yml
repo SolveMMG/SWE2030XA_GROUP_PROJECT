@@ -44,8 +44,10 @@ jobs:
           JWT_SECRET: ci-test-secret
           JWT_REFRESH_SECRET: ci-test-refresh-secret
           CLIENT_URL: http://localhost:3000
-          SESSION_SECRET: ci-session-secret
           NODE_ENV: test
+          GOOGLE_CLIENT_ID: ci-google-client-id
+          GOOGLE_CLIENT_SECRET: ci-google-client-secret
+          GOOGLE_CALLBACK_URL: http://localhost:5000/api/v1/auth/google/callback
 
   lint-and-test-client:
     name: Client — Lint & Test

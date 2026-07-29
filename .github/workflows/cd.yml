@@ -6,6 +6,11 @@ on:
     types: [completed]
     branches: [main]
 
+# Render setup (services + deploy hooks) lives in render.yaml — see README
+# "First-time Render setup". Until RENDER_DEPLOY_HOOK_SERVER/CLIENT are added
+# under Settings → Secrets and variables → Actions, these steps no-op instead
+# of failing the workflow.
+
 jobs:
   deploy:
     name: Deploy to Render
@@ -14,7 +19,13 @@ jobs:
 
     steps:
       - name: Trigger server deploy
+        if: ${{ secrets.RENDER_DEPLOY_HOOK_SERVER != '' }}
         run: curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK_SERVER }}"
 
       - name: Trigger client deploy
+        if: ${{ secrets.RENDER_DEPLOY_HOOK_CLIENT != '' }}
         run: curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK_CLIENT }}"
+
+      - name: No deploy hooks configured
+        if: ${{ secrets.RENDER_DEPLOY_HOOK_SERVER == '' && secrets.RENDER_DEPLOY_HOOK_CLIENT == '' }}
+        run: echo "RENDER_DEPLOY_HOOK_SERVER/CLIENT not set yet — skipping deploy. See README for setup."
