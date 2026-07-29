@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
+const rateLimit = require('express-rate-limit');
 const { errorHandler } = require('./middleware/errorHandler');
 
 require('./services/passport');
@@ -18,6 +19,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
 
+app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }));
+
 // Routes
 app.use('/api/v1/auth',      require('./routes/auth'));
 app.use('/api/v1/users',     require('./routes/users'));
@@ -25,7 +28,6 @@ app.use('/api/v1/listings',  require('./routes/listings'));
 app.use('/api/v1/uploads',   require('./routes/uploads'));
 app.use('/api/v1/inquiries', require('./routes/inquiries'));
 app.use('/api/v1/reviews',   require('./routes/reviews'));
-
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 

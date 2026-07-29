@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 
 const ACCESS_EXPIRY = '1h';
 const REFRESH_EXPIRY_DAYS = 30;
@@ -12,7 +14,7 @@ function verifyAccess(token) {
 }
 
 function signRefresh(payload) {
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: `${REFRESH_EXPIRY_DAYS}d` });
+  return jwt.sign({ ...payload, jti: uuidv4() }, process.env.JWT_REFRESH_SECRET, { expiresIn: `${REFRESH_EXPIRY_DAYS}d` });
 }
 
 function verifyRefresh(token) {
@@ -25,4 +27,11 @@ function refreshExpiresAt() {
   return d;
 }
 
-module.exports = { signAccess, verifyAccess, signRefresh, verifyRefresh, refreshExpiresAt };
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+module.exports = {
+  signAccess, verifyAccess, signRefresh, verifyRefresh, refreshExpiresAt,
+  hashToken, REFRESH_EXPIRY_DAYS,
+};

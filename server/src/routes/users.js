@@ -57,7 +57,7 @@ router.get('/:id', param('id').isInt(), validate, async (req, res, next) => {
   try {
     const { rows } = await pool.query(USER_STATS_SQL, [req.params.id]);
     if (!rows.length) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'User not found' } });
-    const { google_id, ...user } = rows[0];
+    const { google_id, email, ...user } = rows[0];
     res.json(user);
   } catch (err) { next(err); }
 });
