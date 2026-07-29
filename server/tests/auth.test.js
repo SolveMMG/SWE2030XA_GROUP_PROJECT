@@ -3,9 +3,24 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 const request = require('supertest');
 const app = require('../src/app');
 const pool = require('../src/db/pool');
-const { signRefresh, refreshExpiresAt } = require('../src/utils/jwt');
+const { signRefresh, refreshExpiresAt, hashToken } = require('../src/utils/jwt');
 
 let userId, refreshToken;
+
+async function insertToken(token) {
+  await pool.query(
+    'INSERT INTO auth_tokens (user_id, refresh_token, expires_at) VALUES ($1,$2,$3)',
+    [userId, hashToken(token), refreshExpiresAt()]
+  );
+}
+
+function cookieHeader(token) {
+  return [`refreshToken=${token}`];
+}
+
+function cookieValue(res) {
+  return /refreshToken=([^;]+)/.exec(res.headers['set-cookie'].join(';'))[1];
+}
 
 beforeAll(async () => {
   const { rows } = await pool.query(
@@ -15,34 +30,50 @@ beforeAll(async () => {
   );
   userId = rows[0].id;
   refreshToken = signRefresh({ userId });
-  await pool.query(
-    'INSERT INTO auth_tokens (user_id, refresh_token, expires_at) VALUES ($1,$2,$3)',
-    [userId, refreshToken, refreshExpiresAt()]
-  );
+  await insertToken(refreshToken);
 });
 
 afterAll(async () => {
   await pool.query('DELETE FROM users WHERE id = $1', [userId]);
 });
 
+describe('POST /api/v1/auth/exchange', () => {
+  test('rejects a missing code', async () => {
+    const res = await request(app).post('/api/v1/auth/exchange').send({});
+    expect(res.status).toBe(400);
+  });
+
+  test('rejects an unknown code', async () => {
+    const res = await request(app).post('/api/v1/auth/exchange').send({ code: 'not-a-real-code' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('INVALID_CODE');
+  });
+});
+
 describe('POST /api/v1/auth/refresh', () => {
-  test('returns new token pair and rotates refresh token', async () => {
+  test('returns a new access token and rotates the refresh cookie, keeping it out of the body', async () => {
     const res = await request(app)
       .post('/api/v1/auth/refresh')
-      .send({ refreshToken });
+      .set('Cookie', cookieHeader(refreshToken));
     expect(res.status).toBe(200);
     expect(res.body.token).toBeDefined();
-    expect(res.body.refreshToken).toBeDefined();
-    expect(res.body.refreshToken).not.toBe(refreshToken);
-    refreshToken = res.body.refreshToken;
+    expect(res.body.refreshToken).toBeUndefined();
+
+    const setCookie = res.headers['set-cookie'].join(';');
+    expect(setCookie).toContain('HttpOnly');
+    const newToken = cookieValue(res);
+    expect(newToken).not.toBe(refreshToken);
+    refreshToken = newToken;
   });
 
   test('rejects already-used (rotated) refresh token', async () => {
     const oldToken = refreshToken;
-    await request(app).post('/api/v1/auth/refresh').send({ refreshToken });
+    const rotateRes = await request(app).post('/api/v1/auth/refresh').set('Cookie', cookieHeader(refreshToken));
+    refreshToken = cookieValue(rotateRes);
+
     const res = await request(app)
       .post('/api/v1/auth/refresh')
-      .send({ refreshToken: oldToken });
+      .set('Cookie', cookieHeader(oldToken));
     expect(res.status).toBe(401);
     expect(res.body.error.code).toBe('TOKEN_REVOKED');
   });
@@ -50,40 +81,39 @@ describe('POST /api/v1/auth/refresh', () => {
   test('rejects a malformed token string', async () => {
     const res = await request(app)
       .post('/api/v1/auth/refresh')
-      .send({ refreshToken: 'not.a.valid.jwt' });
+      .set('Cookie', cookieHeader('not.a.valid.jwt'));
     expect(res.status).toBe(401);
     expect(res.body.error.code).toBe('INVALID_TOKEN');
   });
 
-  test('returns 400 when refreshToken is missing', async () => {
-    const res = await request(app).post('/api/v1/auth/refresh').send({});
-    expect(res.status).toBe(400);
+  test('returns 401 when no refresh cookie is present', async () => {
+    const res = await request(app).post('/api/v1/auth/refresh');
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('NO_REFRESH_TOKEN');
   });
 });
 
 describe('POST /api/v1/auth/logout', () => {
-  test('deletes the refresh token and returns ok', async () => {
+  test('deletes the refresh token and clears the cookie', async () => {
     const freshToken = signRefresh({ userId });
-    await pool.query(
-      'INSERT INTO auth_tokens (user_id, refresh_token, expires_at) VALUES ($1,$2,$3)',
-      [userId, freshToken, refreshExpiresAt()]
-    );
+    await insertToken(freshToken);
 
     const res = await request(app)
       .post('/api/v1/auth/logout')
-      .send({ refreshToken: freshToken });
+      .set('Cookie', cookieHeader(freshToken));
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
 
     const { rows } = await pool.query(
       'SELECT id FROM auth_tokens WHERE refresh_token = $1',
-      [freshToken]
+      [hashToken(freshToken)]
     );
     expect(rows.length).toBe(0);
   });
 
-  test('returns 400 when refreshToken is missing', async () => {
-    const res = await request(app).post('/api/v1/auth/logout').send({});
-    expect(res.status).toBe(400);
+  test('is a no-op when no refresh cookie is present', async () => {
+    const res = await request(app).post('/api/v1/auth/logout');
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
   });
 });

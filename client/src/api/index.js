@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api') + '/v1';
 
-const api = axios.create({ baseURL: BASE_URL });
+const api = axios.create({ baseURL: BASE_URL, withCredentials: true });
 
 // Attach Bearer token on every request
 api.interceptors.request.use((config) => {
@@ -11,7 +11,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Auto-refresh on 401 (once per request)
+// Auto-refresh on 401 (once per request). The refresh token itself lives in an
+// httpOnly cookie, so it never touches localStorage or JS-readable state.
 let refreshing = false;
 let waitQueue = [];
 
@@ -36,16 +37,9 @@ api.interceptors.response.use(
     original._retry = true;
     refreshing = true;
 
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) {
-      refreshing = false;
-      return Promise.reject(err);
-    }
-
     try {
-      const { data } = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
+      const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
       localStorage.setItem('token', data.token);
-      localStorage.setItem('refreshToken', data.refreshToken);
       drainQueue(null, data.token);
       original.headers.Authorization = `Bearer ${data.token}`;
       return api(original);

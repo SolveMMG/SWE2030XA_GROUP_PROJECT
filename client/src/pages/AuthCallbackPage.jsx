@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../api';
 
 export default function AuthCallbackPage() {
   const { login } = useAuth();
@@ -8,25 +9,21 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-    const refreshToken = params.get('refreshToken');
+    const code = params.get('code');
 
-    if (!token || !refreshToken) {
-      navigate('/login?error=callback');
+    if (!code) {
+      navigate('/login?error=callback', { replace: true });
       return;
     }
 
-    const userData = {
-      id:       parseInt(params.get('userId')),
-      name:     params.get('name') ?? '',
-      email:    params.get('email') ?? '',
-      photoUrl: params.get('photoUrl') || null,
-    };
-
-    login(userData, token, refreshToken);
-
-    const isNewUser = params.get('isNewUser') === '1';
-    navigate(isNewUser ? '/profile' : '/');
+    api.post('/auth/exchange', { code })
+      .then(({ data }) => {
+        login(data.user, data.token);
+        navigate(data.user.isNewUser ? '/profile' : '/', { replace: true });
+      })
+      .catch(() => {
+        navigate('/login?error=callback', { replace: true });
+      });
   }, [login, navigate]);
 
   return (

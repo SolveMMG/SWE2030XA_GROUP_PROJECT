@@ -14,18 +14,15 @@ function readUser() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(readUser);
 
-  const login = useCallback((userData, token, refreshToken) => {
+  const login = useCallback((userData, token) => {
     localStorage.setItem('token', token);
-    localStorage.setItem('refreshToken', refreshToken);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
   }, []);
 
   const logout = useCallback(async () => {
-    const rt = localStorage.getItem('refreshToken');
-    if (rt) {
-      api.post('/auth/logout', { refreshToken: rt }).catch(() => {});
-    }
+    // Refresh token lives in an httpOnly cookie the browser attaches automatically.
+    api.post('/auth/logout').catch(() => {});
     localStorage.clear();
     setUser(null);
   }, []);

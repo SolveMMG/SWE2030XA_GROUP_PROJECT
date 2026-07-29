@@ -14,7 +14,7 @@ function TestComp() {
     <div>
       <span data-testid="auth">{isAuthenticated ? 'yes' : 'no'}</span>
       <span data-testid="name">{user?.name ?? ''}</span>
-      <button onClick={() => login({ name: 'Alice', id: 1 }, 'tok123', 'ref456')}>login</button>
+      <button onClick={() => login({ name: 'Alice', id: 1 }, 'tok123')}>login</button>
       <button onClick={() => logout()}>logout</button>
       <button onClick={() => updateUser({ name: 'Bob' })}>update</button>
     </div>
@@ -38,13 +38,12 @@ test('restores session from localStorage on mount', () => {
   expect(screen.getByTestId('name')).toHaveTextContent('Cached');
 });
 
-test('login sets user and writes tokens to localStorage', () => {
+test('login sets user and writes the access token to localStorage', () => {
   render(<AuthProvider><TestComp /></AuthProvider>);
   fireEvent.click(screen.getByText('login'));
   expect(screen.getByTestId('auth')).toHaveTextContent('yes');
   expect(screen.getByTestId('name')).toHaveTextContent('Alice');
   expect(localStorage.getItem('token')).toBe('tok123');
-  expect(localStorage.getItem('refreshToken')).toBe('ref456');
 });
 
 test('logout clears user and localStorage', () => {
