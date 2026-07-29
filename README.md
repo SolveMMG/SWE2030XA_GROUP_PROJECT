@@ -82,3 +82,7 @@ SkillSwap/
 | `RENDER_DEPLOY_HOOK_CLIENT` | Render deploy hook URL for the frontend service |
 
 Add these under **Settings → Secrets and variables → Actions** in the GitHub repo.
+
+## Contributors
+
+- cmkitusa
