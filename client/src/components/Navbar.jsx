@@ -33,6 +33,7 @@ export default function Navbar() {
   }, [isAuthenticated]);
 
   async function handleLogout() {
+    closeMobileMenu();
     await logout();
     navigate('/login');
     setMenu(false);
@@ -41,7 +42,11 @@ export default function Navbar() {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+<<<<<<< HEAD
         <Link to="/" className="text-xl font-bold text-blue-600 shrink-0" onClick={() => setMenu(false)}>
+=======
+        <Link to="/" className="text-xl font-bold text-blue-600 shrink-0" onClick={closeMobileMenu}>
+>>>>>>> 5a7d95a (Add NotFoundPage component and enhance Navbar for mobile responsiveness)
           SkillSwap
         </Link>
 
@@ -83,6 +88,7 @@ export default function Navbar() {
           )}
         </nav>
 
+<<<<<<< HEAD
         {/* Mobile right side */}
         <div className="flex sm:hidden items-center gap-2">
           {isAuthenticated && (
@@ -135,16 +141,102 @@ export default function Navbar() {
               <button
                 onClick={handleLogout}
                 className="text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg"
+=======
+        {/* Mobile hamburger toggle */}
+        <button
+          type="button"
+          className="sm:hidden p-2 -mr-2 rounded hover:bg-gray-100 text-gray-700"
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-menu"
+          onClick={() => setMobileOpen((open) => !open)}
+        >
+          {mobileOpen ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* Mobile menu panel */}
+      {mobileOpen && (
+        <nav id="mobile-menu" className="sm:hidden border-t border-gray-200 bg-white px-4 py-3 flex flex-col gap-1 text-sm">
+          <Link
+            to="/"
+            onClick={closeMobileMenu}
+            className="px-2 py-2 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100 transition-colors"
+          >
+            Browse
+          </Link>
+
+          {isAuthenticated ? (
+            <>
+              <Link
+                to="/listings/new"
+                onClick={closeMobileMenu}
+                className="px-2 py-2 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100 transition-colors"
+              >
+                Sell a Skill
+              </Link>
+              <Link
+                to="/my-listings"
+                onClick={closeMobileMenu}
+                className="px-2 py-2 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100 transition-colors"
+              >
+                My Listings
+              </Link>
+              <Link
+                to="/inquiries"
+                onClick={closeMobileMenu}
+                className="px-2 py-2 text-gray-600 hover:text-gray-900 rounded hover:bg-gray-100 transition-colors"
+              >
+                Inquiries
+              </Link>
+              <Link
+                to="/profile"
+                onClick={closeMobileMenu}
+                className="flex items-center gap-2 px-2 py-2 rounded hover:bg-gray-100 transition-colors"
+              >
+                {user.photoUrl ? (
+                  <img src={user.photoUrl} className="w-7 h-7 rounded-full object-cover" alt={user.name} />
+                ) : (
+                  <span className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-xs flex items-center justify-center font-semibold">
+                    {user.name?.[0]?.toUpperCase()}
+                  </span>
+                )}
+                <span className="text-gray-700 font-medium">{user.name?.split(' ')[0]}</span>
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-left px-2 py-2 text-gray-500 hover:text-gray-700 rounded hover:bg-gray-100 transition-colors"
+>>>>>>> 5a7d95a (Add NotFoundPage component and enhance Navbar for mobile responsiveness)
               >
                 Sign out
               </button>
             </>
           ) : (
+<<<<<<< HEAD
             <Link to="/login" onClick={() => setMenu(false)} className="px-3 py-2 bg-blue-600 text-white rounded-lg font-medium text-center">
               Sign in
             </Link>
           )}
         </div>
+=======
+            <Link
+              to="/login"
+              onClick={closeMobileMenu}
+              className="mt-1 text-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium transition-colors"
+            >
+              Sign in
+            </Link>
+          )}
+        </nav>
+>>>>>>> 5a7d95a (Add NotFoundPage component and enhance Navbar for mobile responsiveness)
       )}
     </header>
   );
